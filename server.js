@@ -2,9 +2,10 @@ const express = require("express");
 
 const app = express();
 
+app.use(express.json()); //If the request contains JSON, convert it into a JavaScript object.
+
 const PORT = 3000;
 
-// In-memory task list
 const tasks = [
     {
         id: 1,
@@ -32,7 +33,7 @@ app.get("/", (req, res) => {
     });
 });
 
-// Health endpoint
+// Health check endpoint
 app.get("/health", (req, res) => {
     res.json({
         status: "ok"
@@ -59,7 +60,29 @@ app.get("/tasks/:id", (req, res) => {
     res.json(task);
 });
 
-// Start the server
+// Create a new task
+app.post("/tasks", (req, res) => {
+
+    const { title } = req.body;
+
+    if (!title) {
+        return res.status(400).json({
+            error: "Title is required"
+        });
+    }
+
+    const newTask = {
+        id: tasks.length + 1,
+        title: title,
+        done: false
+    };
+
+    tasks.push(newTask);
+
+    res.status(201).json(newTask);
+
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });

@@ -1,7 +1,7 @@
 const express = require("express");
 const swaggerUi = require("swagger-ui-express");
 const swaggerDocument = require("./openapi.json");
-console.log(swaggerDocument.info);
+const Database = require("better-sqlite3");
 
 const app = express();
 
@@ -9,24 +9,31 @@ app.use(express.json());
 
 const PORT = 3000;
 
-// In-memory tasks
-const tasks = [
-    {
-        id: 1,
-        title: "Buy groceries",
-        done: false
-    },
-    {
-        id: 2,
-        title: "Complete assignment",
-        done: true
-    },
-    {
-        id: 3,
-        title: "Go to the gym",
-        done: false
-    }
-];
+// Connect to database
+const db = new Database("tasks.db");
+
+// Create tasks table
+db.prepare(`
+    CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        done INTEGER
+    )
+`).run();
+
+// Add example tasks only if database is empty
+const count = db.prepare("SELECT COUNT(*) AS count FROM tasks").get();
+
+if (count.count === 0) {
+    const insert = db.prepare(
+        "INSERT INTO tasks (title, done) VALUES (?, ?)"
+    );
+
+    insert.run("Buy groceries", 0);
+    insert.run("Complete assignment", 1);
+    insert.run("Go to the gym", 0);
+}
+
 
 // Root endpoint
 app.get("/", (req, res) => {
@@ -37,6 +44,7 @@ app.get("/", (req, res) => {
     });
 });
 
+
 // Health endpoint
 app.get("/health", (req, res) => {
     res.json({
@@ -44,101 +52,50 @@ app.get("/health", (req, res) => {
     });
 });
 
+
 // GET all tasks
 app.get("/tasks", (req, res) => {
-    res.json(tasks);
+    res.json([]);
 });
+
 
 // GET one task
 app.get("/tasks/:id", (req, res) => {
-
-    const id = parseInt(req.params.id);
-
-    const task = tasks.find(task => task.id === id);
-
-    if (!task) {
-        return res.status(404).json({
-            error: `Task ${id} not found`
-        });
-    }
-
-    res.json(task);
-
+    res.json({
+        message: "Stage 1 will connect this to the database"
+    });
 });
+
 
 // POST new task
 app.post("/tasks", (req, res) => {
-
-    const { title } = req.body;
-
-    if (!title) {
-        return res.status(400).json({
-            error: "Title is required"
-        });
-    }
-
-    const newTask = {
-        id: tasks.length + 1,
-        title: title,
-        done: false
-    };
-
-    tasks.push(newTask);
-
-    res.status(201).json(newTask);
-
+    res.json({
+        message: "Stage 2 will connect this to the database"
+    });
 });
+
 
 // PUT update task
 app.put("/tasks/:id", (req, res) => {
-
-    const id = parseInt(req.params.id);
-
-    const task = tasks.find(task => task.id === id);
-
-    if (!task) {
-        return res.status(404).json({
-            error: `Task ${id} not found`
-        });
-    }
-
-    const { title, done } = req.body;
-
-    if (!title) {
-        return res.status(400).json({
-            error: "Title is required"
-        });
-    }
-
-    task.title = title;
-    task.done = done;
-
-    res.json(task);
-
+    res.json({
+        message: "Stage 3 will connect this to the database"
+    });
 });
+
 
 // DELETE task
 app.delete("/tasks/:id", (req, res) => {
-
-    const id = parseInt(req.params.id);
-
-    const index = tasks.findIndex(task => task.id === id);
-
-    if (index === -1) {
-        return res.status(404).json({
-            error: `Task ${id} not found`
-        });
-    }
-
-    tasks.splice(index, 1);
-
-    res.sendStatus(204);
-
+    res.json({
+        message: "Stage 3 will connect this to the database"
+    });
 });
+
 
 // Swagger UI
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
+
+// Start server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });

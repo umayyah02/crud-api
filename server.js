@@ -81,9 +81,28 @@ app.get("/tasks/:id", (req, res) => {
 
 
 // POST new task
+// POST new task
 app.post("/tasks", (req, res) => {
-    res.json({
-        message: "Stage 2 will connect this to the database"
+
+    const { title } = req.body;
+
+    // Validate title
+    if (!title || title.trim() === "") {
+        return res.status(400).json({
+            error: "Title is required"
+        });
+    }
+
+    // Insert task into database
+    const result = db.prepare(
+        "INSERT INTO tasks (title, done) VALUES (?, ?)"
+    ).run(title, 0);
+
+    // Return the newly created task
+    res.status(201).json({
+        id: Number(result.lastInsertRowid),
+        title: title,
+        done: false
     });
 });
 

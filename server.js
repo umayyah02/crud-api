@@ -79,8 +79,6 @@ app.get("/tasks/:id", (req, res) => {
     res.json(task);
 });
 
-
-// POST new task
 // POST new task
 app.post("/tasks", (req, res) => {
 
@@ -106,20 +104,67 @@ app.post("/tasks", (req, res) => {
     });
 });
 
-
 // PUT update task
 app.put("/tasks/:id", (req, res) => {
+
+    const id = parseInt(req.params.id);
+
+    const { title, done } = req.body;
+
+    // Check if task exists
+    const task = db.prepare(
+        "SELECT * FROM tasks WHERE id = ?"
+    ).get(id);
+
+    if (!task) {
+        return res.status(404).json({
+            error: `Task ${id} not found`
+        });
+    }
+
+    // Validate title
+    if (!title || title.trim() === "") {
+        return res.status(400).json({
+            error: "Title is required"
+        });
+    }
+
+    // Update task
+    db.prepare(
+        "UPDATE tasks SET title = ?, done = ? WHERE id = ?"
+    ).run(title, done ? 1 : 0, id);
+
+    // Return updated task
     res.json({
-        message: "Stage 3 will connect this to the database"
+        id: id,
+        title: title,
+        done: done
     });
 });
 
-
 // DELETE task
 app.delete("/tasks/:id", (req, res) => {
-    res.json({
-        message: "Stage 3 will connect this to the database"
-    });
+
+    const id = parseInt(req.params.id);
+
+    // Check if task exists
+    const task = db.prepare(
+        "SELECT * FROM tasks WHERE id = ?"
+    ).get(id);
+
+    if (!task) {
+        return res.status(404).json({
+            error: `Task ${id} not found`
+        });
+    }
+
+    // Delete task
+    db.prepare(
+        "DELETE FROM tasks WHERE id = ?"
+    ).run(id);
+
+    // No content
+    res.sendStatus(204);
 });
 
 

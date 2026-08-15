@@ -55,15 +55,28 @@ app.get("/health", (req, res) => {
 
 // GET all tasks
 app.get("/tasks", (req, res) => {
-    res.json([]);
+    const tasks = db.prepare("SELECT * FROM tasks").all();
+
+    res.json(tasks);
 });
 
 
 // GET one task
 app.get("/tasks/:id", (req, res) => {
-    res.json({
-        message: "Stage 1 will connect this to the database"
-    });
+
+    const id = parseInt(req.params.id);
+
+    const task = db.prepare(
+        "SELECT * FROM tasks WHERE id = ?"
+    ).get(id);
+
+    if (!task) {
+        return res.status(404).json({
+            error: `Task ${id} not found`
+        });
+    }
+
+    res.json(task);
 });
 
 
